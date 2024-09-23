@@ -1,0 +1,33 @@
+// Basics
+python L4-slides-python.py one
+python L4-slides-python.py try
+python L4-slides-python.py context 😂
+python L4-slides-python.py cursors
+python L4-slides-python.py create
+
+
+// Insert
+python L4-slides-python.py insert
+python L4-slides-python.py insert --open
+python L4-slides-python.py in_var 'I am Batman'
+
+
+// Select
+python L4-slides-python.py select "'%Batman%'"
+python L4-slides-python.py select "'%Batman%'; DELETE FROM Quotes WHERE 1=1; INSERT INTO Quotes (y) VALUES ('Joker was here')"
+python L4-slides-python.py select "'%Batman%'"
+python L4-slides-python.py select "'%Joker%'"
+python L4-slides-python.py in_var 'I am Batman'
+python L4-slides-python.py select --safe "'%Batman%'; DELETE FROM Quotes WHERE 1=1; INSERT INTO Quotes (y) VALUES ('Joker was here')"
+python L4-slides-python.py select --safe "%Batman%"
+
+
+// Autocommit => OFF
+python L4-slides-python.py autocommit_off
+python L4-slides-python.py autocommit_off --commit
+python L4-slides-python.py autocommit_off --err-commit
+
+
+// Transactions
+python L4-slides-python.py transactions
+python L4-slides-python.py transactions --issue
