@@ -1,0 +1,461 @@
+        now_testing        
+---------------------------
+ 1. View AllAccountRecords
+(1 row)
+
+                             result                             
+----------------------------------------------------------------
+ This should find two accounts, 21 and 85, both of which are OK
+(1 row)
+
+ pid | aid |  sum  |  max  | case 
+-----+-----+-------+-------+------
+  50 |  21 |  7894 |  7894 | OK
+  50 |  85 | -4436 | -4436 | OK
+(2 rows)
+
+                               result                               
+--------------------------------------------------------------------
+ This should find 21 accounts with no records (check on outer join)
+(1 row)
+
+ count 
+-------
+    21
+(1 row)
+
+    now_checking     
+---------------------
+ 2. Trigger on Bills
+(1 row)
+
+BEGIN
+             result             
+--------------------------------
+ This should give error on date
+(1 row)
+
+ERROR:  CheckBills: bDueDate must be after today
+CONTEXT:  PL/pgSQL function checkbills() line 21 at RAISE
+ROLLBACK
+BEGIN
+              result              
+----------------------------------
+ This should give error on amount
+(1 row)
+
+ERROR:  CheckBills: bAmount must be positive
+CONTEXT:  PL/pgSQL function checkbills() line 16 at RAISE
+ROLLBACK
+BEGIN
+                     result                      
+-------------------------------------------------
+ This should give error as updates are forbidden
+(1 row)
+
+ERROR:  CheckBills: UPDATE is only allowed for bIsPaid
+CONTEXT:  PL/pgSQL function checkbills() line 10 at RAISE
+ROLLBACK
+BEGIN
+                     result                      
+-------------------------------------------------
+ This should give error as deletes are forbidden
+(1 row)
+
+ERROR:  CheckBills: DELETE is not allowed
+CONTEXT:  PL/pgSQL function checkbills() line 4 at RAISE
+ROLLBACK
+BEGIN
+         result          
+-------------------------
+ This insert should work
+(1 row)
+
+INSERT 0 1
+            result            
+------------------------------
+ This should show one account
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ROLLBACK
+           result            
+-----------------------------
+ This should show no account
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+         now_testing          
+------------------------------
+ 3. Trigger on AccountRecords
+(1 row)
+
+                  message                   
+--------------------------------------------
+ Creating a function to find bogus accounts
+(1 row)
+
+CREATE FUNCTION
+              result              
+----------------------------------
+ There should be 0 bogus accounts
+(1 row)
+
+ bogus 
+-------
+     0
+(1 row)
+
+BEGIN
+              result              
+----------------------------------
+ This should give error on amount
+(1 row)
+
+INSERT 0 1
+ROLLBACK
+              result              
+----------------------------------
+ There should be 0 bogus accounts
+(1 row)
+
+ bogus 
+-------
+     0
+(1 row)
+
+BEGIN
+                     result                      
+-------------------------------------------------
+ This should give error as updates are forbidden
+(1 row)
+
+UPDATE 1
+ROLLBACK
+BEGIN
+                     result                      
+-------------------------------------------------
+ This should give error as deletes are forbidden
+(1 row)
+
+DELETE 1
+ROLLBACK
+BEGIN
+            result             
+-------------------------------
+ This deposit should work fine
+(1 row)
+
+INSERT 0 1
+              result               
+-----------------------------------
+ BONUS: This should still return 0
+(1 row)
+
+ bogus 
+-------
+     1
+(1 row)
+
+                                 result                                  
+-------------------------------------------------------------------------
+ Just in case we do not get an empty result, then check it was account 5
+(1 row)
+
+ aid | pid |   adate    | abalance | aover | rid | aid | rdate | rtype | ramount | rbalance 
+-----+-----+------------+----------+-------+-----+-----+-------+-------+---------+----------
+   5 |  10 | 2014-10-26 |        0 | 59000 | 528 |   5 |       | T     |  100000 |         
+(1 row)
+
+ROLLBACK
+     now_testing      
+----------------------
+ 4. Function Transfer
+(1 row)
+
+BEGIN
+                          result                           
+-----------------------------------------------------------
+ Transfer from 8 to 2 should not work (insufficient funds)
+(1 row)
+
+ERROR:  function transfer(integer, integer, integer) does not exist
+LINE 1: select Transfer ( 2, 8, 1 );
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ROLLBACK
+BEGIN
+                             result                             
+----------------------------------------------------------------
+ BONUS: Transfer from 2 to 8 of negative amount should NOT work
+(1 row)
+
+ERROR:  function transfer(integer, integer, integer) does not exist
+LINE 1: select Transfer ( 2, 8, -1 );
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ROLLBACK
+BEGIN
+                    result                    
+----------------------------------------------
+ Transfer from 8 to 2 of 0 amount should work
+(1 row)
+
+ERROR:  function transfer(integer, integer, integer) does not exist
+LINE 1: select Transfer ( 8, 2, 0 );
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK
+BEGIN
+                  result                   
+-------------------------------------------
+ Transfer from 2 to 200000 should NOT work
+(1 row)
+
+ERROR:  function transfer(integer, integer, integer) does not exist
+LINE 1: select Transfer ( 2, 200000, 1 );
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ROLLBACK
+     now_checking     
+----------------------
+ 5. View DebtorStatus
+(1 row)
+
+          result          
+--------------------------
+ Should return 28 debtors
+(1 row)
+
+ERROR:  relation "debtorstatus" does not exist
+LINE 2: from DebtorStatus;
+             ^
+           result            
+-----------------------------
+ Two women owe more than 10K
+(1 row)
+
+ERROR:  relation "debtorstatus" does not exist
+LINE 2: from DebtorStatus
+             ^
+      now_testing      
+-----------------------
+ 6. Trigger on Persons
+(1 row)
+
+BEGIN
+         result          
+-------------------------
+ This insert should work
+(1 row)
+
+INSERT 0 1
+                              result                              
+------------------------------------------------------------------
+ This should return Gummi and one account with overdraft of 10000
+(1 row)
+
+ pid |     pname      | pgender | pheight | aid | pid |   adate    | abalance | aover 
+-----+----------------+---------+---------+-----+-----+------------+----------+-------
+  58 | Geir Bjornsson | M       |    1.82 | 100 |  58 | 2014-10-26 |        0 | 27000
+(1 row)
+
+                         result                          
+---------------------------------------------------------
+ This should return 0 account records for the new person
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ROLLBACK
+       now_testing        
+--------------------------
+ 7. Function InsertPerson
+(1 row)
+
+BEGIN
+         result          
+-------------------------
+ This insert should work
+(1 row)
+
+ERROR:  function insertperson(unknown, unknown, numeric, integer) does not exist
+LINE 1: select InsertPerson ('Gummi', 'M', 1.74, 21000);
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK
+      now_testing       
+------------------------
+ 8. Function PayOneBill
+(1 row)
+
+BEGIN
+                    result                     
+-----------------------------------------------
+ Payment of bill 12 should work (over = 22000)
+(1 row)
+
+ERROR:  function payonebill(integer) does not exist
+LINE 1: select PayOneBill ( 12 );
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK
+BEGIN
+                       message                        
+------------------------------------------------------
+ Making a person with two identically valued accounts
+(1 row)
+
+UPDATE 1
+      result      
+------------------
+ Note the lastval
+(1 row)
+
+ lastval 
+---------
+     227
+(1 row)
+
+             result             
+--------------------------------
+ Payment of bill 29 should work
+(1 row)
+
+ERROR:  function payonebill(integer) does not exist
+LINE 1: select PayOneBill ( 29 );
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK
+BEGIN
+                       result                       
+----------------------------------------------------
+ Payment of bill 108 should not work (already paid)
+(1 row)
+
+ERROR:  function payonebill(integer) does not exist
+LINE 1: select PayOneBill (108);
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ROLLBACK
+BEGIN
+                         result                         
+--------------------------------------------------------
+ Payment of bill 20000 should not work (does not exist)
+(1 row)
+
+ERROR:  function payonebill(integer) does not exist
+LINE 1: select PayOneBill (20000);
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ROLLBACK
+BEGIN
+                     result                     
+------------------------------------------------
+ Payment of bill 3 should not work (no account)
+(1 row)
+
+ERROR:  function payonebill(integer) does not exist
+LINE 1: select PayOneBill (3);
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ROLLBACK
+BEGIN
+                          result                          
+----------------------------------------------------------
+ Payment of bill 107 should not work (insufficient funds)
+(1 row)
+
+ERROR:  function payonebill(integer) does not exist
+LINE 1: select PayOneBill (107);
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ROLLBACK
+      now_testing      
+-----------------------
+ 9. Function LoanMoney
+(1 row)
+
+BEGIN
+                  result                   
+-------------------------------------------
+ Loaning a negative amount should not work
+(1 row)
+
+ERROR:  function loanmoney(integer, integer, date) does not exist
+LINE 1: select LoanMoney ( 6, -1, CURRENT_DATE );
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ROLLBACK
+BEGIN
+                   result                    
+---------------------------------------------
+ Loaning with due date today should not work
+(1 row)
+
+ERROR:  function loanmoney(integer, integer, date) does not exist
+LINE 1: select LoanMoney ( 6, 1, CURRENT_DATE );
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ROLLBACK
+BEGIN
+        result         
+-----------------------
+ This loan should work
+(1 row)
+
+ERROR:  function loanmoney(integer, integer, date) does not exist
+LINE 1: select LoanMoney ( 6, 10000, CURRENT_DATE+100 );
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK
+       now_checking       
+--------------------------
+ 10. View FinancialStatus
+(1 row)
+
+            result            
+------------------------------
+ This should return 79 people
+(1 row)
+
+ERROR:  relation "financialstatus" does not exist
+LINE 2: from FinancialStatus;
+             ^
+                       result                        
+-----------------------------------------------------
+ Return person 78 with 18073 as balance, 0 as unpaid
+(1 row)
+
+ERROR:  relation "financialstatus" does not exist
+LINE 2: from FinancialStatus
+             ^
