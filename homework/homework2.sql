@@ -1,0 +1,14 @@
+-- 1) In this part, consider ONLY the ER diagram above. Choose the correct statements.
+-- (a) All foxes have a weight. [✅]
+-- (b) A hunter can kill a fox without the assistance of a dog [❌]
+-- (c) A dog can kill a bird [❌]
+-- (d) Hunters are animals [❌]
+-- (e) All animals are dead [❌]
+-- (f) A hunter can kill a fox with the assistance of at least one dog [✅]
+-- (g) All foxes are dead [❌]
+-- (h) A bird can be killed by many hunters [❌]
+-- (i) All birds are dead [❌]
+-- (j) Given a hunter, it is possible to find the total weight of the animals he/she has killed [✅]
+-- (k) A bird can be a dog [✅]
+
+
