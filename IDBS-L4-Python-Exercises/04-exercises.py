@@ -41,7 +41,15 @@ def create_person_table(conn: pg.Connection):
     Creates a table person. Drops it if it already exists.
     """
     try:
-        # TODO: Add your code here
+        conn.execute("drop table if exists Person")
+        conn.execute(
+            """
+            create table Person (
+                name varchar(250) primary key,
+                balance INT not null
+            )
+            """
+        )
         print("haiii")
     except Exception as error:
         raise error
@@ -53,7 +61,7 @@ def insert_person(conn: pg.Connection, name: str, balance: int):
     Inserts a new row into person
     """
     try:
-        # TODO: Add your code here
+        conn.execute("insert into person (name, balance) Values(%s, %s)", [name, balance])
         print()
     except Exception as error:
         raise error
@@ -66,8 +74,10 @@ def print_people(conn: pg.Connection):
     Output format is: name=<name>, balance=<balance>
     """
     try:
-        # TODO: Add your code here
-        print()
+        person_cursor = conn.execute("select * from person")
+        people: list[dict] = person_cursor.fetchall()
+        for person in people:
+            print("name=" + person[0] + ", balance=" + str(person[1]))
     except Exception as error:
         raise error
 
@@ -79,8 +89,7 @@ def get_balance_unsafe(conn:pg.Connection, name:str):
     This function is prone to SQL Injections
     """
     try:
-        # TODO: Add your code here
-        print()
+        print(conn.execute("select balance from person where name = " + name))
     except Exception as error:
         raise error
 
@@ -91,7 +100,7 @@ def get_balance_safe(conn:pg.Connection, name:str):
     Fetches the balance of the person with the provided name
     """
     try:
-        # TODO: Add your code here
+        print(conn.execute("select balance from person where name = '%s'", [name]))
         print()
     except Exception as error:
         raise error
