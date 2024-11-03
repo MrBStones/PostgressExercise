@@ -182,7 +182,6 @@ CREATE TABLE rates (
 
 
 
-
 -- 2) Practical Normalization
 -- In the homework quiz on LearnIT, you will find a script to create and populate five in-
 -- dependent relations, each having seven columns and a primary key with a few thousand
@@ -200,6 +199,27 @@ CREATE TABLE rates (
 -- (a) Find all the important FDs in the relations, given the constraints and simplifying
 -- assumptions that are listed in detail below.
 
+-- PID --> PN | MAY HOLD
+
+-- HID --> HS | MAY HOLD
+
+-- HID --> HZ | MAY HOLD
+
+-- HID --> HC | MAY HOLD
+
+-- HZ --> HC | MAY HOLD
+
+-- -- Old table
+-- PID A
+-- HID B
+
+-- PN C
+-- S D
+-- HS E
+-- HZ F
+-- HC G
+-- PRIMARY KEY (PID, HID)
+
 -- Note: We strongly recommend using your favorite programming language to generate
 -- an SQL script with all the FD detection queries, using the SQL query template covered
 -- in slide 44 of the provided slides for this quiz. The program could take as input a list
@@ -211,9 +231,92 @@ CREATE TABLE rates (
 -- all non-redundant FDs. Write down the resulting schema description in a simple
 -- Relation(columns) format.
 
+-- A --> C | MAY HOLD
+
+-- B --> E | MAY HOLD
+
+-- B --> F | MAY HOLD
+
+-- B --> G | MAY HOLD
+
+-- F --> G | MAY HOLD
+
+-- -- keys
+-- A INT NOT NULL,
+-- B INT NOT NULL, 
+
+-- -- Others 
+-- C VARCHAR(50) NOT NULL, 
+-- D INT NOT NULL, 
+-- E VARCHAR(50) NOT NULL,
+-- F INT NOT NULL, 
+-- G VARCHAR(50) NOT NULL,
+-- PRIMARY KEY (PID, HID)
+
+-- -- new table
+-- PID
+-- PN 
+-- PRIMARY KEY (PID)
+
+-- -- new table
+-- HID
+-- HS
+-- HZ
+-- PRIMARY KEY (HID)
+
+-- -- new table
+-- HZ 
+-- HC 
+-- PRIMARY KEY (HZ)
+
+-- -- Old table
+-- PID
+-- HID
+-- S
+-- PRIMARY KEY (PID, HID)
+
 -- (c) Write the detailed SQL commands to create the resulting tables (with primary and
 -- foreign keys) and populate them, by extracting the relevant data from the original
 -- relations.
+
+DROP TABLE IF EXISTS NewRentals;
+DROP TABLE IF EXISTS NewRentalsA;
+DROP TABLE IF EXISTS NewRentalsB;
+DROP TABLE IF EXISTS NewRentalsC;
+
+
+CREATE TABLE NewRentals (
+       PID INT NOT NULL,
+       HID INT NOT NULL, 
+       S INT NOT NULL, 
+       PRIMARY KEY (PID, HID)
+);
+
+CREATE TABLE NewRentalsA (
+       PID INT NOT NULL,
+       PN VARCHAR(50) NOT NULL, 
+       PRIMARY KEY (PID)
+);
+
+CREATE TABLE NewRentalsC (
+       HZ INT NOT NULL, 
+       HC VARCHAR(50) NOT NULL,
+       PRIMARY KEY (HZ)
+);
+
+CREATE TABLE NewRentalsB (
+       HID INT NOT NULL, 
+       HS VARCHAR(50) NOT NULL,
+       HZ INT NOT NULL REFERENCES NewRentalsC(HZ), 
+       PRIMARY KEY (HID)
+);
+
+INSERT INTO NewRentals SELECT PID, HID, S FROM Rentals;
+INSERT INTO NewRentalsA SELECT DISTINCT PID, PN FROM Rentals;
+INSERT INTO NewRentalsC SELECT DISTINCT HZ, HC FROM Rentals;
+INSERT INTO NewRentalsB SELECT DISTINCT HID, HS, HZ FROM Rentals;
+
+
 
 -- Note: In this homework, use the “homework” version of commands to create the new
 -- relations (see slide 9 of the provided slides for this quiz), so that you can compare the
