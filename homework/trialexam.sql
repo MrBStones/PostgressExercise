@@ -1,6 +1,17 @@
-select count(DISTINCT g.did)
-from game g
-join buys b on g.gid = b.gid
-join person p  on b.pid = p.pid
-where p.birthyear = 1990
+select count(*) from (
+    select b.pid 
+    from buys b
+    join game g on b.gid = g.gid
+    join developer d on g.did = d.did
+    join Country c on d.cid = c.cid
+    where c.population < 400000
+    GROUP by b.pid
+    having count(DISTINCT c.cid) = (
+        select count(c.cid)
+        from Country c
+        where c.population < 400000)
+);
+
+
+
 ;
