@@ -1,0 +1,79 @@
+
+          fd          | validity 
+----------------------+----------
+ Projects: ID --> MID | MAY HOLD
+(1 row)
+
+         fd          | validity 
+---------------------+----------
+ Projects: ID --> MN | MAY HOLD
+(1 row)
+
+
+          fd          | validity 
+----------------------+----------
+ Projects: PID --> PN | MAY HOLD
+(1 row)
+
+
+          fd          | validity 
+----------------------+----------
+ Projects: SID --> SN | MAY HOLD
+(1 row)
+
+
+          fd          | validity 
+----------------------+----------
+ Projects: SN --> SID | MAY HOLD
+(1 row)
+
+
+          fd          | validity 
+----------------------+----------
+ Projects: MID --> MN | MAY HOLD
+(1 row)
+
+          fd          | validity 
+----------------------+----------
+ Projects: MN --> MID | MAY HOLD
+(1 row)
+
+PRIMARY KEY (ID, PID, SID)
+
+ID PID SID SN PN MID MN
+A  B   C   D  E  F   G
+
+
+A -> F
+A -> G
+B -> E
+C -> D
+D -> C
+F -> G
+G -> F
+
+(in brackets means PRIMARY KEY)
+[ABC]
+[A]F
+[B]E
+[C]D
+[F]G
+
+(in brackets means PRIMARY KEY)
+[ID PID SID] SN PN MID MN
+
+ID --> MID
+ID --> MN
+PID --> PN
+SID --> SN
+SN --> SID
+MID --> MN
+MN --> MID
+
+[ID PID SID]
+[ID] MID
+[PID] PN
+[SID] SN
+[MID] MN
+
+THIS IS BCNF
