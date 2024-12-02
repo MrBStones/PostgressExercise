@@ -13,5 +13,12 @@ select count(*) from (
 );
 
 
+drop TABLE if EXISTS competes;
 
-;
+CREATE TABLE competes (
+    e1id int,
+    e2id int,
+    attempt_date date,
+    score float not null,
+    PRIMARY KEY (e1id, e2id, attempt_date)
+);
