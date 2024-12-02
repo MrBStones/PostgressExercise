@@ -1,15 +1,45 @@
-SELECT count(P.pid) as a
-from person p
-where p.name like 'Eva%';
+select count(*) as a
+from (
+    select p.pid
+    from person p
+    where p.birthyear < 1980
+    UNION
+    SELECT pl.pid
+    from plays pl
+    join game g on pl.gid = g.gid
+    where g.did = 5
+) X;
 
-SELECT count(*) as b
-from person p
-where p.name like 'Eva%';
+select count(*) as b
+from (
+    select p.pid
+    from person p
+    where p.birthyear < 1980
+    EXCEPT
+    SELECT pl.pid
+    from plays pl
+    join game g on pl.gid = g.gid
+    where g.did = 5
+) X;
 
-SELECT count(*) as c
+select count(*) as c
 from person p
-where p.name like 'Eva_';
+where p.birthyear < 1980
+or p.pid in (
+    SELECT pl.pid
+    from plays pl
+    join game g on pl.gid = g.gid
+    where g.did = 5
+);
 
-SELECT count(*) as d
-from person p
-where p.name = 'Eva';
+select count(*) as d
+from (
+    select p.pid
+    from person p
+    where p.birthyear < 1980
+    INTERSECT
+    SELECT pl.pid
+    from plays pl
+    join game g on pl.gid = g.gid
+    where g.did = 5
+) X;
