@@ -40,52 +40,52 @@
 -- [MID] MN
 
 -- 3. Write the detailed SQL commands to create the resulting tables (with primary keys and foreign keys) and populate them, by extracting the relevant data from the original relations.
-DROP TABLE IF EXISTS NewProjects CASCADE;
-DROP TABLE IF EXISTS NewProjectsA CASCADE;
-DROP TABLE IF EXISTS NewProjectsB CASCADE;
-DROP TABLE IF EXISTS NewProjectsC CASCADE;
-DROP TABLE IF EXISTS NewProjectsD CASCADE;
+-- DROP TABLE IF EXISTS NewProjects CASCADE;
+-- DROP TABLE IF EXISTS NewProjectsA CASCADE;
+-- DROP TABLE IF EXISTS NewProjectsB CASCADE;
+-- DROP TABLE IF EXISTS NewProjectsC CASCADE;
+-- DROP TABLE IF EXISTS NewProjectsD CASCADE;
 
-CREATE TABLE NewProjectsD (
-    MID INT NOT NULL,
-    MN VARCHAR(255) NOT NULL,
-    PRIMARY KEY (MID)
-);
+-- CREATE TABLE NewProjectsD (
+--     MID INT NOT NULL,
+--     MN VARCHAR(255) NOT NULL,
+--     PRIMARY KEY (MID)
+-- );
 
-CREATE TABLE NewProjectsA (
-    ID INT NOT NULL,
-    MID INT NOT NULL,
-    PRIMARY KEY (ID),
-    FOREIGN KEY (MID) REFERENCES NewProjectsD(MID)
-);
+-- CREATE TABLE NewProjectsA (
+--     ID INT NOT NULL,
+--     MID INT NOT NULL,
+--     PRIMARY KEY (ID),
+--     FOREIGN KEY (MID) REFERENCES NewProjectsD(MID)
+-- );
 
-CREATE TABLE NewProjectsB (
-    PID INT NOT NULL,
-    PN VARCHAR(255) NOT NULL,
-    PRIMARY KEY (PID)
-);
+-- CREATE TABLE NewProjectsB (
+--     PID INT NOT NULL,
+--     PN VARCHAR(255) NOT NULL,
+--     PRIMARY KEY (PID)
+-- );
 
-CREATE TABLE NewProjectsC (
-    SID INT NOT NULL,
-    SN VARCHAR(255) NOT NULL,
-    PRIMARY KEY (SID)
-);
+-- CREATE TABLE NewProjectsC (
+--     SID INT NOT NULL,
+--     SN VARCHAR(255) NOT NULL,
+--     PRIMARY KEY (SID)
+-- );
 
-CREATE TABLE NewProjects (
-    ID INT NOT NULL,
-    PID INT NOT NULL,
-    SID INT NOT NULL,
-    PRIMARY KEY (ID, PID, SID),
-    FOREIGN KEY (ID) REFERENCES NewProjectsA(ID),
-    FOREIGN KEY (PID) REFERENCES NewProjectsB(PID),
-    FOREIGN KEY (SID) REFERENCES NewProjectsC(SID)
-);
+-- CREATE TABLE NewProjects (
+--     ID INT NOT NULL,
+--     PID INT NOT NULL,
+--     SID INT NOT NULL,
+--     PRIMARY KEY (ID, PID, SID),
+--     FOREIGN KEY (ID) REFERENCES NewProjectsA(ID),
+--     FOREIGN KEY (PID) REFERENCES NewProjectsB(PID),
+--     FOREIGN KEY (SID) REFERENCES NewProjectsC(SID)
+-- );
 
-INSERT INTO NewProjectsD SELECT DISTINCT MID, MN FROM Projects;
-INSERT INTO NewProjectsA SELECT DISTINCT ID, MID FROM Projects;
-INSERT INTO NewProjectsB SELECT DISTINCT PID, PN FROM Projects;
-INSERT INTO NewProjectsC SELECT DISTINCT SID, SN FROM Projects;
-INSERT INTO NewProjects SELECT ID, PID, SID FROM Projects;
+-- INSERT INTO NewProjectsD SELECT DISTINCT MID, MN FROM Projects;
+-- INSERT INTO NewProjectsA SELECT DISTINCT ID, MID FROM Projects;
+-- INSERT INTO NewProjectsB SELECT DISTINCT PID, PN FROM Projects;
+-- INSERT INTO NewProjectsC SELECT DISTINCT SID, SN FROM Projects;
+-- INSERT INTO NewProjects SELECT ID, PID, SID FROM Projects;
 
 -- 4. Select the correct normal form for the decomposed schema.
 -- THIS IS 3NF
@@ -107,19 +107,68 @@ INSERT INTO NewProjects SELECT ID, PID, SID FROM Projects;
 -- Answer each of the following questions using a single SQL query on the examination database. Enter the result of each query into the quiz on LearnIT. As before, queries should adhere to the detailed guidelines given in Homework 1.
 
 -- (a) In the database, 353 songs have a duration of at least 10 minutes. What is the average duration of songs, in minutes, that have a duration between 5 and 25 minutes, inclusive? Round the number of minutes (ROUND(...)).
+select round(extract(epoch from avg)/60) as a from (
+    select avg(s.duration) 
+    from songs s
+    where s.duration >= interval '5 minutes'
+    and s.duration <= interval '25 minutes'
+);
 
 -- (b) What is the total duration in minutes of all explicit songs in the database? Round the number of minutes (ROUND(...)).
+select round(extract(epoch from sum)/60) as b from (
+    select sum(s.duration) 
+    from songs s
+    where s.IsExplicit = 1
+);
 
 -- (c) The database contains just 5 songs released in 1953. What is the average number of songs released in a year? Round the number of songs (ROUND(...)). Note: This is a very simple query. Try also to answer which year had the largest number of songs. Observe how much harder this query is!
+select round(avg(count)) as c from (
+select count(*)
+from songs s
+GROUP by extract(year from s.ReleaseDate));
 
 -- (d) The database contains multiple albums by the artist Queen. Each album has a different average song duration, with the maximum average song duration of an album by Queen being 354 seconds. What is the maximum average song duration (in seconds) of an album by Miles Davis? Note: The output of the maximum average song duration is rounded ROUND(...)
 
+select round(avg(extract(epoch from max))) as d from (
+    select max(s.duration)
+    from songs s
+    join Albumsongs als on s.songid = als.songid
+    join AlbumArtists ala on als.albumid = ala.albumid
+    join artists a on ala.artistid = a.artistid
+    where artist = 'Miles Davis'
+    GROUP by als.albumid
+);
+
 -- (e) There are 938 song titles that have been used for at least 2 songs, making up a total of 2072 songs with those titles. How many songs have a title that has been used for at least 4 songs?
+select sum(count) as e from (
+select count(s.title)
+from songs s
+GROUP by s.title
+having count(s.title) >= 2);
 
 -- (f) How many songs have been released after 2010 or belong to an album released in January.
+select count(s.title) as f
+from songs s 
+where extract(year from s.releasedate) > 2010
+or extract(month from s.releasedate) = 01;
 
 -- (g) There are 1147 Albums with more than 1 song and none of them are Explicit. How many Albums consists of more than 1 song with all songs being Explicit?
+SELECT COUNT(albumid) as g
+FROM (
+    SELECT a.albumid
+    FROM AlbumSongs a
+    JOIN Songs s ON s.songid = a.songid
+    GROUP BY a.albumid
+    HAVING COUNT(*) > 1  -- Albums with more than 1 song
+       AND COUNT(CASE WHEN s.isExplicit = 0 THEN 1 END) = 0 -- No non-explicit songs
+);
 
 -- (h) The highest number of genres covered within an Album is 5. In the database, there is only one Album that has this amount of genres. What is the name of this Album? 
+SELECT a.Album as h
+FROM Albums a
+JOIN AlbumGenres ag ON a.AlbumId = ag.AlbumId
+GROUP BY a.AlbumId, a.Album
+HAVING COUNT(ag.GenreId) = 5;
+
 
 -- Note: Write your query to be capable of finding all albums that have the highest number of genres. (No hardcoded values)
