@@ -10,5 +10,3 @@
 -- (i) All birds are dead [❌]
 -- (j) Given a hunter, it is possible to find the total weight of the animals he/she has killed [✅]
 -- (k) A bird can be a dog [✅]
-
-
